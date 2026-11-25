@@ -2,7 +2,10 @@
 
 The joke is written to /output/entry.txt. The competition gate wants
 UTF-8 text of 1-200 characters, a single line, and more than whitespace,
-so the program checks all three before and after writing the file.
+so the program checks all three before writing and again on the file
+it just wrote. The joke itself is built to be read aloud in one breath:
+a true office observation (endless meetings) with a surprising last
+word (the "multitasking" is job-hunting).
 """
 
 from pathlib import Path
@@ -16,7 +19,7 @@ MAX_LENGTH = 200
 OUTPUT_PATH = Path("/output/entry.txt")
 
 
-def problems(text):
+def problems(text: str) -> list[str]:
     """Return a list of gate violations for *text* (empty means valid)."""
     found = []
     if not 1 <= len(text) <= MAX_LENGTH:
@@ -28,7 +31,7 @@ def problems(text):
     return found
 
 
-def check_saved(path, expected):
+def check_saved(path: Path, expected: str) -> list[str]:
     """Re-read *path* and re-run the gate on what is actually on disk."""
     saved = path.read_text(encoding="utf-8")
     if saved != expected:
@@ -36,19 +39,22 @@ def check_saved(path, expected):
     return problems(saved)
 
 
-def main():
+def main() -> int:
     text = JOKE.strip()
     bad = problems(text)
     if bad:
-        raise SystemExit("invalid entry: " + "; ".join(bad))
+        print("invalid entry: " + "; ".join(bad))
+        return 1
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(text, encoding="utf-8")
     bad = check_saved(OUTPUT_PATH, text)
     if bad:
-        raise SystemExit("saved entry invalid: " + "; ".join(bad))
+        print("saved entry invalid: " + "; ".join(bad))
+        return 1
     print(text)
     print("Wrote %d characters to %s" % (len(text), OUTPUT_PATH))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
