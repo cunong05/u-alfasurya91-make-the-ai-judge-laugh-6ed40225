@@ -5,13 +5,15 @@ UTF-8 text of 1-200 characters, a single line, and more than whitespace,
 so the program checks all three before and after writing the file.
 """
 
+from pathlib import Path
+
 JOKE = (
     "My CV says 'excellent multitasker' — in office terms, that means "
     "sitting in meetings while job-hunting in another tab."
 )
 
 MAX_LENGTH = 200
-OUTPUT_PATH = "/output/entry.txt"
+OUTPUT_PATH = Path("/output/entry.txt")
 
 
 def problems(text):
@@ -26,17 +28,25 @@ def problems(text):
     return found
 
 
+def check_saved(path, expected):
+    """Re-read *path* and re-run the gate on what is actually on disk."""
+    saved = path.read_text(encoding="utf-8")
+    if saved != expected:
+        return ["read-back mismatch"]
+    return problems(saved)
+
+
 def main():
     text = JOKE.strip()
     bad = problems(text)
     if bad:
         raise SystemExit("invalid entry: " + "; ".join(bad))
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as handle:
-        handle.write(text)
-    with open(OUTPUT_PATH, encoding="utf-8") as handle:
-        saved = handle.read()
-    if saved != text:
-        raise SystemExit("read-back mismatch")
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(text, encoding="utf-8")
+    bad = check_saved(OUTPUT_PATH, text)
+    if bad:
+        raise SystemExit("saved entry invalid: " + "; ".join(bad))
+    print(text)
     print("Wrote %d characters to %s" % (len(text), OUTPUT_PATH))
 
 
